@@ -8,7 +8,7 @@ class RemoteCodeExecution:
     @staticmethod
     def execute_code(code, input):
         cwd = os.getcwd()
-        tmp_dir = "tmp"
+        tmp_dir = "temp"
 
         docker_cmd = f'docker run --rm -i -v {cwd}/{tmp_dir}:/tmp gcc:latest /bin/bash << \'EOF\'\n' \
                      f'cd /tmp && cat > code.cpp << \'CODE\'\n' \
