@@ -1,6 +1,5 @@
 from src.rce import RemoteCodeExecution
 from flask import Flask, request
-import json
 
 app = Flask(__name__)
 
