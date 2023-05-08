@@ -4,7 +4,7 @@ import os
 
 load_dotenv()
 
-is_debug = bool(os.getenv("DEV"))
+is_debug = os.getenv("DEV", 'False').lower() in ('true', '1', 't')
 
 port = 4000
 if not is_debug:
