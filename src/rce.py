@@ -68,7 +68,7 @@ class RemoteCodeExecution:
 
         if self.benchmark:
             duration = time.time() - start
-            print(f"took {duration * 1000:.4} ms")
+            out["perf"] = f"{duration * 1000:.4} ms"
 
         return out
 
