@@ -1,3 +1,4 @@
+from multiprocessing import set_start_method
 from typing import List
 import subprocess
 import shlex
@@ -13,30 +14,41 @@ class RemoteCodeExecution:
         self.cc = "g++"
         self.cc_opts = ["-std=c++2a", "-O0"]
 
+        self.benchmark = True
+
+        set_start_method("fork")
+
     def compile(self, code: str) -> str:
         src_file = self.src_file + "-" + str(int(time.time())) + ".cpp"
         bin_file = src_file.replace(".cpp", ".bin")
 
-        source_code = code.encode()
+        source = open(f"{self.tmp_dir}/{src_file}", "w")
+        source.write(code)
+        source.close()
 
-        subprocess.run(
-            [
-                self.cc,
-                *self.cc_opts,
-                "-o",
-                f"{self.tmp_dir}/{bin_file}",
-                "-x",
-                "c++",
-                "-",
-            ],
-            input=source_code,
-            check=True,
+        cmd = [
+            self.cc,
+            *self.cc_opts,
+            "-o",
+            f"{self.tmp_dir}/{bin_file}",
+            f"{self.tmp_dir}/{src_file}",
+        ]
+        proc = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False
         )
+        _, error = proc.communicate()
 
-        return bin_file
+        return {"files": [src_file, bin_file], "error": error.decode("utf-8")}
 
     def unsafe_execute_code(self, code: str, input: str):
-        bin_file = self.compile(code)
+        if self.benchmark:
+            start = time.time()
+
+        comp_res = self.compile(code)
+        if comp_res["error"]:
+            return {"output": "", "error": comp_res["error"]}
+
+        src_file, bin_file = comp_res["files"]
 
         result = subprocess.run(
             f"{self.tmp_dir}/{bin_file}",
@@ -46,12 +58,17 @@ class RemoteCodeExecution:
             shell=False,
         )
 
+        os.remove(f"{self.tmp_dir}/{src_file}")
         os.remove(f"{self.tmp_dir}/{bin_file}")
 
         out = {
             "output": result.stdout.decode("utf-8"),
             "error": result.stderr.decode("utf-8"),
         }
+
+        if self.benchmark:
+            duration = time.time() - start
+            print(f"took {duration * 1000:.4} ms")
 
         return out
 
