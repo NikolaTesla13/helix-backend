@@ -1,29 +1,52 @@
 from typing import List
 import subprocess
 import shlex
+import time
 import os
 
 
 class RemoteCodeExecution:
     def __init__(self):
         self.tmp_dir = "tmp"
-        self.src_file = "task.cpp"
-        self.bin_file = "task"
+        self.src_file = "task"
+
+        self.cc = "g++"
+        self.cc_opts = ["-std=c++20", "-O0"]
+
+    def compile(self, code: str) -> str:
+        src_file = self.src_file + "-" + str(int(time.time())) + ".cpp"
+        bin_file = src_file.replace(".cpp", ".bin")
+
+        source_code = code.encode()
+
+        subprocess.run(
+            [
+                self.cc,
+                *self.cc_opts,
+                "-o",
+                f"{self.tmp_dir}/{bin_file}",
+                "-x",
+                "c++",
+                "-",
+            ],
+            input=source_code,
+            check=True,
+        )
+
+        return bin_file
 
     def unsafe_execute_code(self, code: str, input: str):
-        source = open(f"{self.tmp_dir}/{self.src_file}", "w")
-        source.write(code)
-        source.close()
-
-        cmd = f"g++ -std=c++2a -o ./{self.tmp_dir}/a.out ./{self.tmp_dir}/{self.src_file} && ./{self.tmp_dir}/a.out"
+        bin_file = self.compile(code)
 
         result = subprocess.run(
-            cmd,
+            f"{self.tmp_dir}/{bin_file}",
             input=input.encode(),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            shell=True,
+            shell=False,
         )
+
+        os.remove(f"{self.tmp_dir}/{bin_file}")
 
         out = {
             "output": result.stdout.decode("utf-8"),
@@ -37,7 +60,7 @@ class RemoteCodeExecution:
         source.write(code)
         source.close()
 
-        cmd = f"g++ -std=c++2a -o ./{self.tmp_dir}/{self.bin_file} ./{self.tmp_dir}/{self.src_file}"
+        cmd = f"{self.cc} {self.cc_opts} -o ./{self.tmp_dir}/{self.bin_file} ./{self.tmp_dir}/{self.src_file}"
 
         result = subprocess.run(
             shlex.split(cmd),

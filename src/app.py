@@ -34,9 +34,3 @@ def test_code():
     body = request.get_json(silent=True)
     result = rce_engine.unsafe_test_code(body["code"], body["tests"])
     return result
-
-
-@app.post("/rce/test")
-@cross_origin()
-def test():
-    return "TODO"
