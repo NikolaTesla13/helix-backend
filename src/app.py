@@ -21,7 +21,9 @@ def run():
     unsafe = request.args.get("unsafe")
 
     if unsafe == "true":
-        result = rce_engine.unsafe_execute_code(body["code"], body["input"])
+        result = rce_engine.unsafe_execute_code(
+            body["lang"], body["code"], body["input"]
+        )
     else:
         result = rce_engine.execute_code(body["code"], body["input"])
 

@@ -11,55 +11,80 @@ class RemoteCodeExecution:
         self.tmp_dir = "tmp"
         self.src_file = "task"
 
-        self.cc = "g++"
-        self.cc_opts = ["-std=c++2a", "-O0"]
+        self.interpreters = {
+            "cpp": [],
+            "c": [],
+            "py": ["python3"],
+        }
+        self.compiler = {"cpp": "g++", "c": "gcc", "py": ""}
+        self.compiler_opts = {
+            "cpp": ["-std=c++2a", "-O0"],
+            "c": ["-std=c99", "-O0"],
+            "py": [],
+        }
 
         self.benchmark = True
 
-        set_start_method("fork")
+    def compile(self, code: str, lang: str):
+        start = time.time()
 
-    def compile(self, code: str) -> str:
-        src_file = self.src_file + "-" + str(int(time.time())) + ".cpp"
-        bin_file = src_file.replace(".cpp", ".bin")
+        src_file = self.src_file + "-" + str(int(time.time())) + "." + lang
+        bin_file = src_file.replace("." + lang, ".bin")
 
         source = open(f"{self.tmp_dir}/{src_file}", "w")
         source.write(code)
         source.close()
 
-        cmd = [
-            self.cc,
-            *self.cc_opts,
-            "-o",
-            f"{self.tmp_dir}/{bin_file}",
-            f"{self.tmp_dir}/{src_file}",
-        ]
-        proc = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False
-        )
-        _, error = proc.communicate()
+        if self.compiler[lang] != "":
+            cmd = [
+                self.compiler[lang],
+                *self.compiler_opts[lang],
+                "-o",
+                f"{self.tmp_dir}/{bin_file}",
+                f"{self.tmp_dir}/{src_file}",
+            ]
+            proc = subprocess.Popen(
+                cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False
+            )
+            _, error = proc.communicate()
+        else:
+            error = b""
+            bin_file = src_file
 
-        return {"files": [src_file, bin_file], "error": error.decode("utf-8")}
+        return {
+            "files": [src_file, bin_file],
+            "error": error.decode("utf-8"),
+            "perf": time.time() - start,
+        }
 
-    def unsafe_execute_code(self, code: str, input: str):
+    def unsafe_execute_code(self, lang: str, code: str, input: str):
+        comp_res = self.compile(code, lang)
+        comp_perf = comp_res["perf"]
+        if comp_res["error"]:
+            return {
+                "output": "",
+                "error": comp_res["error"],
+                "pers": {"runtime": "0 ms", "compilation": f"{comp_perf * 1000:.4} ms"},
+            }
+
         if self.benchmark:
             start = time.time()
-
-        comp_res = self.compile(code)
-        if comp_res["error"]:
-            return {"output": "", "error": comp_res["error"]}
 
         src_file, bin_file = comp_res["files"]
 
         result = subprocess.run(
-            f"{self.tmp_dir}/{bin_file}",
+            [*self.interpreters[lang], f"{self.tmp_dir}/{bin_file}"],
             input=input.encode(),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             shell=False,
         )
 
-        os.remove(f"{self.tmp_dir}/{src_file}")
-        os.remove(f"{self.tmp_dir}/{bin_file}")
+        try:
+            os.remove(f"{self.tmp_dir}/{src_file}")
+            os.remove(f"{self.tmp_dir}/{bin_file}")
+        except:
+            pass
 
         out = {
             "output": result.stdout.decode("utf-8"),
@@ -68,10 +93,14 @@ class RemoteCodeExecution:
 
         if self.benchmark:
             duration = time.time() - start
-            out["perf"] = f"{duration * 1000:.4} ms"
+            out["perf"] = {
+                "runtime": f"{duration * 1000:.4} ms",
+                "compilation": f"{comp_perf * 1000:.4} ms",
+            }
 
         return out
 
+    # TODO: update this
     def unsafe_test_code(self, code: str, tests: List[dict]):
         source = open(f"{self.tmp_dir}/{self.src_file}", "w")
         source.write(code)
