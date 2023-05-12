@@ -7,7 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN mkdir temp
 
 RUN apt-get update && \
-    apt-get install -y g++-11
+    apt-get install -y g++
 
 # https://docs.docker.com/engine/install/ubuntu/
 # TODO

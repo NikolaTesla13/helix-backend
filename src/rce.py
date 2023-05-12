@@ -11,7 +11,7 @@ class RemoteCodeExecution:
         self.src_file = "task"
 
         self.cc = "g++"
-        self.cc_opts = ["-std=c++20", "-O0"]
+        self.cc_opts = ["-std=c++2a", "-O0"]
 
     def compile(self, code: str) -> str:
         src_file = self.src_file + "-" + str(int(time.time())) + ".cpp"
