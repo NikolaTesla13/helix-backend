@@ -15,12 +15,19 @@ class AIModelPredictor:
 
     def generate(self, prompt):
         # model = "google/flan-t5-small"
-        model = "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5"
+        # model = "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5"
         # model = "gpt2-large"
         # model = "bigscience/bloom-560m"
+        # model = "EleutherAI/gpt-neo-2.7B"
+        model = "microsoft/DialoGPT-medium"
 
         data = json.dumps(
-            {"inputs": prompt, "temperature": 0.9, "max_new_tokens": 1000}
+            {
+                "inputs": prompt,
+                "temperature": 0.9,
+                "max_length": 1000,
+                "max_new_tokens": 1000,
+            }
         )
 
         response = requests.request(
@@ -33,7 +40,6 @@ class AIModelPredictor:
             data = json.loads(content[1:][:-1])
             return data
         except:
-            print("error in response!")
             return content
 
     def summarize(self, prompt):
