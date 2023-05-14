@@ -1,3 +1,4 @@
+from src.auth import hash_password, verify_password
 from src.rce import RemoteCodeExecution
 from src.ai import AIModelPredictor
 from flask import Flask, request
@@ -15,6 +16,18 @@ app.config["CORS_ORIGINS"] = "https://helix-zeta.vercel.app"
 @app.get("/")
 def index():
     return "<p>Hello, World!</p>"
+
+
+@app.post("/auth/encrypt")
+def encrypt():
+    body = request.get_json(silent=True)
+    return {"hash": hash_password(body["password"])}
+
+
+@app.post("/auth/check")
+def check():
+    body = request.get_json(silent=True)
+    return {"ok": verify_password(body["plain"], body["hash"])}
 
 
 @app.post("/rce/run")

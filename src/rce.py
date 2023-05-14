@@ -100,7 +100,6 @@ class RemoteCodeExecution:
 
         return out
 
-    # TODO: update this
     def unsafe_test_code(self, lang: str, code: str, tests: List[dict]):
         comp_res = self.compile(code, lang)
         if comp_res["error"]:
