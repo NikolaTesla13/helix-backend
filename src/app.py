@@ -10,7 +10,7 @@ rce_engine = RemoteCodeExecution()
 ai_engine = AIModelPredictor()
 
 app.config["CORS_HEADERS"] = "Content-Type"
-app.config["CORS_ORIGINS"] = "https://helix-zeta.vercel.app"
+# app.config["CORS_ORIGINS"] = "https://helix-zeta.vercel.app"
 
 
 @app.get("/")
