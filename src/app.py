@@ -58,7 +58,7 @@ def test_code():
 @cross_origin()
 def generate_text():
     body = request.get_json(silent=True)
-    result = ai_engine.generate(body["prompt"])
+    result = ai_engine.generate(body["prompt"], body["model"])
     return result
 
 

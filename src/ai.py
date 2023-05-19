@@ -13,13 +13,13 @@ class AIModelPredictor:
             "Authorization": f"Bearer {self.api_key}",
         }
 
-    def generate(self, prompt):
+    def generate(self, prompt, model):
         # model = "google/flan-t5-small"
         # model = "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5"
         # model = "gpt2-large"
         # model = "bigscience/bloom-560m"
         # model = "EleutherAI/gpt-neo-2.7B"
-        model = "microsoft/DialoGPT-medium"
+        # model = "microsoft/DialoGPT-medium"
 
         data = json.dumps(
             {
